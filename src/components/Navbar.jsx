@@ -11,7 +11,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <span className="text-2xl">🎯</span>
+            <img
+              src="/Blog_MiraCansada/logo.png"
+              alt="Mira Cansada"
+              className="h-12 w-12 object-contain shrink-0"
+            />
             <div>
               <span className="text-xl font-bold text-white tracking-tight">
                 Mira<span className="text-discord-accent">Cansada</span>

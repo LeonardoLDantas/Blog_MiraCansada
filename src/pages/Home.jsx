@@ -23,10 +23,13 @@ export default function Home() {
     <div>
       {/* Hero */}
       <div className="text-center mb-10 fade-in">
-        <h1 className="text-4xl sm:text-5xl font-extrabold mb-2">
-          🎯 <span className="text-white">Mira</span>
-          <span className="text-discord-accent">Cansada</span>
-        </h1>
+        <div className="flex items-center justify-center gap-4 mb-2">
+          <img src="/Blog_MiraCansada/logo.png" alt="logo" className="h-40 w-40 object-contain" />
+          <h1 className="text-4xl sm:text-5xl font-extrabold">
+            <span className="text-white">Mira</span>
+            <span className="text-discord-accent">Cansada</span>
+          </h1>
+        </div>
         <p className="text-discord-muted text-lg">memes, fotos e caos organizado do discord</p>
       </div>
 
@@ -60,7 +63,7 @@ export default function Home() {
       {/* Posts grid */}
       {loading ? (
         <div className="text-center py-20 text-discord-muted">
-          <div className="text-5xl mb-4 animate-spin">🎯</div>
+          <img src="/Blog_MiraCansada/logo.png" alt="carregando" className="h-20 w-20 object-contain animate-spin mb-4 mx-auto" />
           <p>carregando...</p>
         </div>
       ) : filtered.length === 0 ? (
