@@ -2,12 +2,15 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 
+const isAdmin = () => sessionStorage.getItem('mc_admin') === '1'
+
 const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', outro: '📌' }
 
 export default function PostDetail() {
   const { id } = useParams()
-  const { posts } = usePosts()
+  const { posts, deletePost } = usePosts()
   const navigate = useNavigate()
+  const admin = isAdmin()
 
   const post = posts.find((p) => p.id === id)
 
@@ -36,13 +39,29 @@ export default function PostDetail() {
 
   return (
     <div className="max-w-3xl mx-auto fade-in">
-      {/* Back */}
-      <button
-        onClick={() => navigate(-1)}
-        className="text-discord-muted hover:text-white transition-colors mb-6 flex items-center gap-2"
-      >
-        ← voltar
-      </button>
+      {/* Back + ações admin */}
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-discord-muted hover:text-white transition-colors flex items-center gap-2"
+        >
+          ← voltar
+        </button>
+        {admin && (
+          <button
+            onClick={() => {
+              if (confirm(`Deletar "${post.title}"?`)) {
+                deletePost(post.id)
+                navigate('/')
+              }
+            }}
+            className="flex items-center gap-2 text-sm bg-red-900/40 border border-red-500/40 text-red-400
+                       hover:bg-red-900/70 transition px-3 py-1.5 rounded-lg"
+          >
+            🗑️ Excluir post
+          </button>
+        )}
+      </div>
 
       {/* Card */}
       <div className="bg-discord-surface border border-discord-card rounded-2xl overflow-hidden">

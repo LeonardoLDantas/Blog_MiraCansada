@@ -225,41 +225,49 @@ export default function Admin() {
             <div className="flex flex-col gap-2 max-h-[480px] overflow-y-auto pr-1">
               {posts.map((post) => (
                 <div key={post.id} className="bg-discord-bg rounded-lg overflow-hidden">
-                  <div className="flex items-center gap-3 p-3 group">
-                  {post.imageUrl && (
-                    <img
-                      src={post.imageUrl}
-                      alt=""
-                      className="w-10 h-10 rounded object-cover shrink-0"
-                      onError={(e) => (e.target.style.display = 'none')}
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{post.title}</p>
-                    <p className="text-discord-muted text-xs">
-                      {post.type} ·{' '}
-                      {post.createdAt?.toDate
-                        ? post.createdAt.toDate().toLocaleDateString('pt-BR')
-                        : '...'}
-                    </p>
+                  {/* Row */}
+                  <div className="flex items-center gap-2 p-3">
+                    {post.imageUrl && (
+                      <img
+                        src={post.imageUrl}
+                        alt=""
+                        className="w-10 h-10 rounded object-cover shrink-0"
+                        onError={(e) => (e.target.style.display = 'none')}
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{post.title}</p>
+                      <p className="text-discord-muted text-xs">
+                        {post.type} ·{' '}
+                        {post.createdAt?.toDate
+                          ? post.createdAt.toDate().toLocaleDateString('pt-BR')
+                          : '...'}
+                      </p>
+                    </div>
+                    {/* Botão comentários */}
+                    <button
+                      onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
+                      className={`text-xs px-2 py-1 rounded border shrink-0 transition ${
+                        expandedPost === post.id
+                          ? 'border-discord-accent text-discord-accent'
+                          : 'border-discord-card text-discord-muted hover:text-white'
+                      }`}
+                      title="Ver comentários"
+                    >
+                      💬
+                    </button>
+                    {/* Botão deletar sempre visível */}
+                    <button
+                      onClick={() => {
+                        if (confirm(`Deletar "${post.title}"?`)) deletePost(post.id)
+                      }}
+                      className="text-discord-muted hover:text-discord-accent transition shrink-0 text-base px-2"
+                      title="Deletar post"
+                    >
+                      🗑️
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
-                    className="text-discord-muted hover:text-white transition text-xs px-2 py-1 rounded border border-discord-card shrink-0"
-                    title="Ver comentários"
-                  >
-                    💬
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Deletar "${post.title}"?`)) deletePost(post.id)
-                    }}
-                    className="text-discord-muted hover:text-discord-accent transition text-lg shrink-0 opacity-0 group-hover:opacity-100"
-                    title="Deletar"
-                  >
-                    🗑️
-                  </button>
-                  </div>
+                  {/* Comentários expandidos */}
                   {expandedPost === post.id && (
                     <div className="px-3 pb-3 border-t border-discord-card">
                       <Comments postId={post.id} isAdmin={true} />
