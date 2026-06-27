@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar } from 'lucide-react'
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 
@@ -31,6 +32,8 @@ export default function Admin() {
   const [success, setSuccess] = useState('')
   const [formError, setFormError] = useState('')
   const [expandedPost, setExpandedPost] = useState(null)
+  const [page, setPage] = useState(0)
+  const PAGE_SIZE = 10
 
   // — Login —
   const handleLogin = (e) => {
@@ -147,9 +150,9 @@ export default function Admin() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="flex flex-col gap-8">
         {/* — Formulário — */}
-        <div className="bg-discord-surface border border-discord-card rounded-2xl p-6">
+        <div className="bg-discord-surface border border-discord-card rounded-2xl p-6 w-full">
           <h2 className="text-lg font-semibold text-white mb-5">✏️ Novo Post</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Tipo */}
@@ -234,7 +237,7 @@ export default function Admin() {
         </div>
 
         {/* — Lista de posts — */}
-        <div className="bg-discord-surface border border-discord-card rounded-2xl p-6">
+        <div className="bg-discord-surface border border-discord-card rounded-2xl p-6 w-full">
           <h2 className="text-lg font-semibold text-white mb-4">
             📋 Posts publicados ({posts.length})
           </h2>
@@ -242,60 +245,141 @@ export default function Admin() {
             <p className="text-discord-muted text-sm text-center py-8">carregando...</p>
           ) : posts.length === 0 ? (
             <p className="text-discord-muted text-sm text-center py-8">nenhum post ainda</p>
-          ) : (
-            <div className="flex flex-col gap-3 max-h-[520px] overflow-y-auto pr-1">
-              {posts.map((post) => (
-                <div key={post.id} className="border border-discord-card rounded-xl overflow-hidden">
-                  {/* Info row */}
-                  <div className="flex items-center gap-3 p-3 bg-discord-bg">
-                    <img
-                      src={post.imageUrl}
-                      alt=""
-                      className="w-12 h-12 rounded-lg object-cover shrink-0 bg-discord-card"
-                      onError={(e) => { e.target.style.display = 'none' }}
+          ) : (() => {
+            const totalPages = Math.ceil(posts.length / PAGE_SIZE)
+            const pagePosts = posts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+            return (
+              <>
+                <div className="flex flex-col gap-3 max-h-[640px] overflow-y-auto pr-1">
+                  {pagePosts.map((post) => (
+                    <PostAdminCard
+                      key={post.id}
+                      post={post}
+                      expanded={expandedPost === post.id}
+                      onToggle={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
+                      onDelete={deletePost}
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold truncate">{post.title}</p>
-                      <p className="text-discord-muted text-xs mt-0.5">
-                        {post.type} · {post.createdAt?.toDate
-                          ? post.createdAt.toDate().toLocaleDateString('pt-BR')
-                          : '...'}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Action buttons */}
-                  <div className="flex border-t border-discord-card">
-                    <button
-                      onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
-                      className={`flex-1 py-2 text-xs font-medium transition border-r border-discord-card ${
-                        expandedPost === post.id
-                          ? 'bg-discord-accent/20 text-discord-accent'
-                          : 'text-discord-muted hover:text-white hover:bg-discord-card'
-                      }`}
-                    >
-                      💬 Comentários
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Deletar "${post.title}"?`)) deletePost(post.id)
-                      }}
-                      className="flex-1 py-2 text-xs font-medium text-red-400 hover:bg-red-900/30 transition"
-                    >
-                      🗑️ Excluir
-                    </button>
-                  </div>
-                  {/* Comentários expandidos */}
-                  {expandedPost === post.id && (
-                    <div className="p-3 border-t border-discord-card bg-discord-bg">
-                      <Comments postId={post.id} isAdmin={true} />
-                    </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-discord-card">
+                    <button
+                      onClick={() => { setPage(p => p - 1); setExpandedPost(null) }}
+                      disabled={page === 0}
+                      className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      ← anterior
+                    </button>
+                    <span className="text-discord-muted text-sm">
+                      página {page + 1} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => { setPage(p => p + 1); setExpandedPost(null) }}
+                      disabled={page >= totalPages - 1}
+                      className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      próximo →
+                    </button>
+                  </div>
+                )}
+              </>
+            )
+          })()}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PostAdminCard({ post, expanded, onToggle, onDelete }) {
+  const [confirming, setConfirming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const date = post.createdAt?.toDate
+    ? post.createdAt.toDate().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '...'
+
+  const handleDelete = async () => {
+    if (!confirming) { setConfirming(true); return }
+    setDeleting(true)
+    try {
+      await onDelete(post.id)
+    } catch (e) {
+      console.error(e)
+      setDeleting(false)
+      setConfirming(false)
+    }
+  }
+
+  return (
+    <div className="rounded-xl bg-discord-bg border border-discord-card">
+      {/* Linha principal */}
+      <div className="flex items-center gap-3 p-3">
+        {/* Thumbnail */}
+        <img
+          src={post.imageUrl}
+          alt=""
+          className="w-14 h-14 rounded-lg object-cover shrink-0 bg-discord-card"
+          onError={(e) => { e.target.style.display = 'none' }}
+        />
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-semibold truncate">{post.title}</p>
+          <p className="text-discord-muted text-xs mt-0.5">
+            {post.type} · {post.author || 'admin'} · {date}
+          </p>
+        </div>
+
+        {/* Ações */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onToggle}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
+              expanded
+                ? 'bg-discord-accent/20 text-discord-accent border-discord-accent/30'
+                : 'text-discord-muted border-discord-card hover:text-white'
+            }`}
+          >
+            <MessageCircle size={12} />
+            {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+
+          {confirming ? (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-500 transition disabled:opacity-50"
+              >
+                {deleting ? '...' : 'confirmar'}
+              </button>
+              <button
+                onClick={() => setConfirming(false)}
+                className="px-2.5 py-1.5 rounded-lg text-xs text-discord-muted border border-discord-card hover:text-white transition"
+              >
+                cancelar
+              </button>
             </div>
+          ) : (
+            <button
+              onClick={() => setConfirming(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400 border border-discord-card hover:bg-red-900/30 hover:border-red-500/40 transition"
+            >
+              <Trash2 size={12} />
+              excluir
+            </button>
           )}
         </div>
       </div>
+
+      {/* Comentários expandidos */}
+      {expanded && (
+        <div className="border-t border-discord-card p-4 bg-discord-surface rounded-b-xl">
+          <Comments postId={post.id} isAdmin={true} />
+        </div>
+      )}
     </div>
   )
 }
