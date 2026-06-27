@@ -1,0 +1,78 @@
+import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+
+export default function Navbar() {
+  const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  return (
+    <nav className="bg-discord-surface border-b border-discord-card sticky top-0 z-50 shadow-lg">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <span className="text-2xl">🎯</span>
+            <div>
+              <span className="text-xl font-bold text-white tracking-tight">
+                Mira<span className="text-discord-accent">Cansada</span>
+              </span>
+              <p className="text-xs text-discord-muted -mt-0.5">o blog do discord</p>
+            </div>
+          </Link>
+
+          {/* Desktop nav */}
+          <div className="hidden sm:flex items-center gap-6">
+            <Link
+              to="/"
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === '/'
+                  ? 'text-discord-accent'
+                  : 'text-discord-muted hover:text-white'
+              }`}
+            >
+              🏠 Feed
+            </Link>
+            <Link
+              to="/admin"
+              className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${
+                location.pathname === '/admin'
+                  ? 'bg-discord-accent text-white'
+                  : 'bg-discord-card text-discord-muted hover:bg-discord-accent hover:text-white'
+              }`}
+            >
+              ⚙️ Admin
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="sm:hidden text-discord-muted hover:text-white p-2"
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
+        </div>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="sm:hidden pb-4 flex flex-col gap-3">
+            <Link
+              to="/"
+              onClick={() => setMenuOpen(false)}
+              className="text-discord-muted hover:text-white py-2"
+            >
+              🏠 Feed
+            </Link>
+            <Link
+              to="/admin"
+              onClick={() => setMenuOpen(false)}
+              className="text-discord-muted hover:text-white py-2"
+            >
+              ⚙️ Admin
+            </Link>
+          </div>
+        )}
+      </div>
+    </nav>
+  )
+}
