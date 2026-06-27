@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { usePosts } from '../hooks/usePosts'
+import Comments from '../components/Comments'
 
 const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', outro: '📌' }
 
@@ -103,6 +104,9 @@ export default function PostDetail() {
           copiar link
         </button>
       </div>
+
+      {/* Comentários */}
+      <Comments postId={post.id} />
     </div>
   )
 }

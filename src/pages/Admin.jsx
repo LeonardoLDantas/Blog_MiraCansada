@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePosts } from '../hooks/usePosts'
+import Comments from '../components/Comments'
 
 // Senha do admin — troque aqui
 const ADMIN_PASSWORD = 'miracansada2024'
@@ -23,6 +24,7 @@ export default function Admin() {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [formError, setFormError] = useState('')
+  const [expandedPost, setExpandedPost] = useState(null)
 
   // — Login —
   const handleLogin = (e) => {
@@ -222,10 +224,8 @@ export default function Admin() {
           ) : (
             <div className="flex flex-col gap-2 max-h-[480px] overflow-y-auto pr-1">
               {posts.map((post) => (
-                <div
-                  key={post.id}
-                  className="flex items-center gap-3 bg-discord-bg rounded-lg p-3 group"
-                >
+                <div key={post.id} className="bg-discord-bg rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-3 p-3 group">
                   {post.imageUrl && (
                     <img
                       src={post.imageUrl}
@@ -244,6 +244,13 @@ export default function Admin() {
                     </p>
                   </div>
                   <button
+                    onClick={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
+                    className="text-discord-muted hover:text-white transition text-xs px-2 py-1 rounded border border-discord-card shrink-0"
+                    title="Ver comentários"
+                  >
+                    💬
+                  </button>
+                  <button
                     onClick={() => {
                       if (confirm(`Deletar "${post.title}"?`)) deletePost(post.id)
                     }}
@@ -252,6 +259,12 @@ export default function Admin() {
                   >
                     🗑️
                   </button>
+                  </div>
+                  {expandedPost === post.id && (
+                    <div className="px-3 pb-3 border-t border-discord-card">
+                      <Comments postId={post.id} isAdmin={true} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
