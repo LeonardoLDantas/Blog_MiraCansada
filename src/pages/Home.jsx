@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { LayoutGrid, List } from 'lucide-react'
 import PostCard from '../components/PostCard'
+import FeedPostCard from '../components/FeedPostCard'
 import { usePosts } from '../hooks/usePosts'
 
 const TYPES = ['todos', 'meme', 'foto', 'gif', 'outro']
+const PAGE_SIZE = 5
 
 export default function Home() {
   const { posts, loading } = usePosts()
   const [filter, setFilter] = useState('todos')
   const [search, setSearch] = useState('')
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('mc_view') || 'grid')
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const sentinelRef = useRef(null)
+
+  const setView = (mode) => {
+    setViewMode(mode)
+    localStorage.setItem('mc_view', mode)
+  }
 
   const filtered = posts.filter((p) => {
     const matchType = filter === 'todos' || p.type === filter
@@ -18,6 +29,30 @@ export default function Home() {
       (p.tags || []).some((t) => t.toLowerCase().includes(search.toLowerCase()))
     return matchType && matchSearch
   })
+
+  const visible = filtered.slice(0, visibleCount)
+  const hasMore = visibleCount < filtered.length
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [filter, search])
+
+  const loadMore = useCallback(() => {
+    setVisibleCount((c) => c + PAGE_SIZE)
+  }, [])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) loadMore()
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, loadMore])
 
   return (
     <div>
@@ -33,16 +68,45 @@ export default function Home() {
         <p className="text-discord-muted text-lg">memes, fotos e caos organizado do discord</p>
       </div>
 
-      {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-8">
-        <input
-          type="text"
-          placeholder="🔍 buscar posts..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 bg-discord-surface border border-discord-card text-white placeholder-discord-muted
-                     rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
-        />
+      {/* Search + Toggle */}
+      <div className="flex flex-col gap-3 mb-8">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="🔍 buscar posts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-discord-surface border border-discord-card text-white placeholder-discord-muted
+                       rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
+          />
+          {/* Toggle Grid / Feed */}
+          <div className="flex bg-discord-surface border border-discord-card rounded-lg overflow-hidden shrink-0">
+            <button
+              title="Grade"
+              onClick={() => setView('grid')}
+              className={`px-3 py-2.5 flex items-center transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-discord-accent text-white'
+                  : 'text-discord-muted hover:text-white'
+              }`}
+            >
+              <LayoutGrid size={17} />
+            </button>
+            <button
+              title="Feed"
+              onClick={() => setView('feed')}
+              className={`px-3 py-2.5 flex items-center border-l border-discord-card transition-all ${
+                viewMode === 'feed'
+                  ? 'bg-discord-accent text-white'
+                  : 'text-discord-muted hover:text-white'
+              }`}
+            >
+              <List size={17} />
+            </button>
+          </div>
+        </div>
+
+        {/* Filtros por tipo */}
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
           {TYPES.map((type) => (
             <button
@@ -60,7 +124,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Posts grid */}
+      {/* Posts */}
       {loading ? (
         <div className="text-center py-20 text-discord-muted">
           <img src="/Blog_MiraCansada/logo.png" alt="carregando" className="h-20 w-20 object-contain animate-spin mb-4 mx-auto" />
@@ -80,11 +144,28 @@ export default function Home() {
         <>
           <p className="text-discord-muted text-sm mb-4">
             {filtered.length} post{filtered.length !== 1 ? 's' : ''}
+            {hasMore && <span> · mostrando {visible.length}</span>}
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filtered.map((post, i) => (
-              <PostCard key={post.id} post={post} index={i} />
-            ))}
+
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {visible.map((post, i) => (
+                <PostCard key={post.id} post={post} index={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="max-w-xl mx-auto flex flex-col gap-5">
+              {visible.map((post, i) => (
+                <FeedPostCard key={post.id} post={post} index={i} />
+              ))}
+            </div>
+          )}
+
+          {/* Sentinel */}
+          <div ref={sentinelRef} className="h-10 mt-6 flex items-center justify-center">
+            {hasMore && (
+              <span className="text-discord-muted text-sm animate-pulse">carregando mais...</span>
+            )}
           </div>
         </>
       )}
