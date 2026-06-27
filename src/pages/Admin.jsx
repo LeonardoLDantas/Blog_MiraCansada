@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 
-// Senha do admin — troque aqui
-const ADMIN_PASSWORD = 'miracansada2024'
+// Usuários admin
+const ADMIN_USERS = {
+  admin:   'miracansada@2024',
+  cripitu: 'miracansada2026',
+  careca:  'Laker2045@',
+}
 
 const TYPE_OPTIONS = [
   { value: 'meme', label: '😂 Meme' },
@@ -13,9 +17,11 @@ const TYPE_OPTIONS = [
 ]
 
 export default function Admin() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem('mc_admin') === '1')
+  const [authed, setAuthed] = useState(() => !!sessionStorage.getItem('mc_admin_user'))
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
+  const loggedUser = sessionStorage.getItem('mc_admin_user') || ''
 
   const { posts, loading, addPost, deletePost } = usePosts()
 
@@ -29,16 +35,19 @@ export default function Admin() {
   // — Login —
   const handleLogin = (e) => {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
+    const user = username.trim().toLowerCase()
+    if (ADMIN_USERS[user] && ADMIN_USERS[user] === password) {
       sessionStorage.setItem('mc_admin', '1')
+      sessionStorage.setItem('mc_admin_user', user)
       setAuthed(true)
     } else {
-      setLoginError('senha incorreta 🎯')
+      setLoginError('usuário ou senha incorretos 🎯')
     }
   }
 
   const handleLogout = () => {
     sessionStorage.removeItem('mc_admin')
+    sessionStorage.removeItem('mc_admin_user')
     setAuthed(false)
   }
 
@@ -57,7 +66,7 @@ export default function Admin() {
         imageUrl:    form.imageUrl.trim(),
         type:        form.type,
         tags:        form.tags.split(',').map((t) => t.trim()).filter(Boolean),
-        author:      'admin',
+        author:      loggedUser || 'admin',
       })
       setForm({ title: '', description: '', imageUrl: '', type: 'meme', tags: '' })
       setPreview('')
@@ -84,13 +93,23 @@ export default function Admin() {
           </div>
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <input
+              type="text"
+              placeholder="usuário"
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setLoginError('') }}
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
+                         rounded-lg px-4 py-3 outline-none focus:border-discord-accent transition-colors"
+              autoFocus
+              autoComplete="username"
+            />
+            <input
               type="password"
               placeholder="senha"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setLoginError('') }}
               className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
                          rounded-lg px-4 py-3 outline-none focus:border-discord-accent transition-colors"
-              autoFocus
+              autoComplete="current-password"
             />
             {loginError && <p className="text-discord-accent text-sm">{loginError}</p>}
             <button
@@ -112,7 +131,7 @@ export default function Admin() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">⚙️ Painel Admin</h1>
-          <p className="text-discord-muted text-sm">{posts.length} posts publicados</p>
+          <p className="text-discord-muted text-sm">{loggedUser} · {posts.length} posts publicados</p>
         </div>
         <button
           onClick={handleLogout}
