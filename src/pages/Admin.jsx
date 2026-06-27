@@ -75,10 +75,12 @@ export default function Admin() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-full max-w-sm bg-discord-surface border border-discord-card rounded-2xl p-8 fade-in">
-          <div className="text-center mb-8">
-            <div className="text-5xl mb-3">🎯</div>
-            <h1 className="text-2xl font-bold text-white">Painel Admin</h1>
-            <p className="text-discord-muted text-sm mt-1">Mira Cansada</p>
+          <div className="flex flex-col items-center gap-3 mb-8">
+            <img src="/Blog_MiraCansada/logo.png" alt="logo" className="h-40 w-40 object-contain" />
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-white leading-tight">Painel Admin</h1>
+              <p className="text-discord-muted text-sm">Mira Cansada</p>
+            </div>
           </div>
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <input
