@@ -1,11 +1,5 @@
 import { Link } from 'react-router-dom'
-
-const TYPE_EMOJI = {
-  meme: '😂',
-  foto: '📸',
-  gif: '🎬',
-  outro: '📌',
-}
+const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', outro: '📌' }
 
 export default function PostCard({ post, index = 0 }) {
   const { id, title, description, imageUrl, type = 'outro', tags = [], createdAt } = post
@@ -40,7 +34,7 @@ export default function PostCard({ post, index = 0 }) {
         ) : null}
         {/* Fallback */}
         <div
-          className="absolute inset-0 hidden items-center justify-center bg-discord-card text-6xl"
+          className="absolute inset-0 hidden items-center justify-center bg-discord-card text-5xl"
           style={{ display: imageUrl ? 'none' : 'flex' }}
         >
           {TYPE_EMOJI[type]}
@@ -62,7 +56,6 @@ export default function PostCard({ post, index = 0 }) {
         )}
 
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          {/* Tags */}
           <div className="flex gap-1 flex-wrap">
             {tags.slice(0, 3).map((tag) => (
               <span

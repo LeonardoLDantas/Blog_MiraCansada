@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar } from 'lucide-react'
+import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar, Settings, PenLine, ClipboardList, LogOut, Send } from 'lucide-react'
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 
@@ -11,10 +11,10 @@ const ADMIN_USERS = {
 }
 
 const TYPE_OPTIONS = [
-  { value: 'meme', label: '😂 Meme' },
-  { value: 'foto', label: '📸 Foto' },
-  { value: 'gif',  label: '🎬 GIF'  },
-  { value: 'outro',label: '📌 Outro' },
+  { value: 'meme',  label: 'Meme',  emoji: '😂' },
+  { value: 'foto',  label: 'Foto',  emoji: '📸' },
+  { value: 'gif',   label: 'GIF',   emoji: '🎬' },
+  { value: 'outro', label: 'Outro', emoji: '📌' },
 ]
 
 export default function Admin() {
@@ -133,14 +133,14 @@ export default function Admin() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">⚙️ Painel Admin</h1>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Settings size={20} /> Painel Admin</h1>
           <p className="text-discord-muted text-sm">{loggedUser} · {posts.length} posts publicados</p>
         </div>
         <button
           onClick={handleLogout}
-          className="text-sm text-discord-muted hover:text-discord-accent transition px-3 py-2 rounded-lg border border-discord-card hover:border-discord-accent"
+          className="flex items-center gap-1.5 text-sm text-discord-muted hover:text-discord-accent transition px-3 py-2 rounded-lg border border-discord-card hover:border-discord-accent"
         >
-          sair
+          <LogOut size={14} /> sair
         </button>
       </div>
 
@@ -153,22 +153,22 @@ export default function Admin() {
       <div className="flex flex-col gap-8">
         {/* — Formulário — */}
         <div className="bg-discord-surface border border-discord-card rounded-2xl p-6 w-full">
-          <h2 className="text-lg font-semibold text-white mb-5">✏️ Novo Post</h2>
+          <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2"><PenLine size={17} /> Novo Post</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Tipo */}
             <div className="flex gap-2 flex-wrap">
-              {TYPE_OPTIONS.map((opt) => (
+              {TYPE_OPTIONS.map(({ value, label, emoji }) => (
                 <button
-                  key={opt.value}
+                  key={value}
                   type="button"
-                  onClick={() => setForm((f) => ({ ...f, type: opt.value }))}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition ${
-                    form.type === opt.value
+                  onClick={() => setForm((f) => ({ ...f, type: value }))}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition ${
+                    form.type === value
                       ? 'bg-discord-accent text-white'
                       : 'bg-discord-bg text-discord-muted hover:text-white border border-discord-card'
                   }`}
                 >
-                  {opt.label}
+                  {emoji} {label}
                 </button>
               ))}
             </div>
@@ -231,15 +231,15 @@ export default function Admin() {
               disabled={saving}
               className="bg-discord-accent text-white font-semibold py-3 rounded-lg hover:opacity-90 transition disabled:opacity-50"
             >
-              {saving ? 'publicando...' : '🚀 Publicar para todos'}
+              {saving ? 'publicando...' : <span className="flex items-center gap-2 justify-center"><Send size={14} /> Publicar para todos</span>}
             </button>
           </form>
         </div>
 
         {/* — Lista de posts — */}
         <div className="bg-discord-surface border border-discord-card rounded-2xl p-6 w-full">
-          <h2 className="text-lg font-semibold text-white mb-4">
-            📋 Posts publicados ({posts.length})
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <ClipboardList size={17} /> Posts publicados ({posts.length})
           </h2>
           {loading ? (
             <p className="text-discord-muted text-sm text-center py-8">carregando...</p>

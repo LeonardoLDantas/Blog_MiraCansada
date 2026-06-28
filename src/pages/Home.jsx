@@ -15,9 +15,12 @@ export default function Home() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef(null)
 
+  const topRef = useRef(null)
+
   const setView = (mode) => {
     setViewMode(mode)
     localStorage.setItem('mc_view', mode)
+    topRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   const filtered = posts.filter((p) => {
@@ -56,6 +59,7 @@ export default function Home() {
 
   return (
     <div>
+      <div ref={topRef} />
       {/* Hero */}
       <div className="text-center mb-10 fade-in">
         <div className="flex items-center justify-center gap-4 mb-2">

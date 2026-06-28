@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MessageCircle, Trash2, Send } from 'lucide-react'
 import { useComments } from '../hooks/useComments'
 
 export default function Comments({ postId, isAdmin = false }) {
@@ -11,7 +12,7 @@ export default function Comments({ postId, isAdmin = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    if (!text.trim()) return setError('escreve alguma coisa 👀')
+    if (!text.trim()) return setError('escreve alguma coisa')
     setSending(true)
     try {
       await addComment({ author, text })
@@ -34,10 +35,11 @@ export default function Comments({ postId, isAdmin = false }) {
 
   return (
     <div className="mt-8">
-      <h2 className="text-lg font-semibold text-white mb-4">
-        💬 Comentários
+      <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <MessageCircle size={18} />
+        Comentários
         {!loading && (
-          <span className="ml-2 text-sm text-discord-muted font-normal">
+          <span className="text-sm text-discord-muted font-normal">
             ({comments.length})
           </span>
         )}
@@ -47,7 +49,7 @@ export default function Comments({ postId, isAdmin = false }) {
       {loading ? (
         <p className="text-discord-muted text-sm">carregando...</p>
       ) : comments.length === 0 ? (
-        <p className="text-discord-muted text-sm mb-6">nenhum comentário ainda. seja o primeiro! 👇</p>
+        <p className="text-discord-muted text-sm mb-6">nenhum comentário ainda. seja o primeiro!</p>
       ) : (
         <div className="flex flex-col gap-3 mb-6">
           {comments.map((c) => (
@@ -64,10 +66,10 @@ export default function Comments({ postId, isAdmin = false }) {
                   {isAdmin && (
                     <button
                       onClick={() => confirm('Deletar comentário?') && deleteComment(c.id)}
-                      className="text-discord-muted hover:text-discord-accent transition opacity-0 group-hover:opacity-100 text-sm"
+                      className="text-discord-muted hover:text-red-400 transition opacity-0 group-hover:opacity-100"
                       title="Deletar"
                     >
-                      🗑️
+                      <Trash2 size={13} />
                     </button>
                   )}
                 </div>
@@ -109,10 +111,11 @@ export default function Comments({ postId, isAdmin = false }) {
           <button
             type="submit"
             disabled={sending}
-            className="bg-discord-accent text-white text-sm font-semibold px-5 py-2 rounded-lg
+            className="flex items-center gap-2 bg-discord-accent text-white text-sm font-semibold px-5 py-2 rounded-lg
                        hover:opacity-90 transition disabled:opacity-50"
           >
-            {sending ? 'enviando...' : '📨 Comentar'}
+            <Send size={14} />
+            {sending ? 'enviando...' : 'Comentar'}
           </button>
         </div>
       </form>

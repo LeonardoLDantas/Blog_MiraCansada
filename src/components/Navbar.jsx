@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
+import { Home, Settings, Menu, X } from 'lucide-react'
 
 export default function Navbar() {
   const location = useLocation()
@@ -28,23 +29,23 @@ export default function Navbar() {
           <div className="hidden sm:flex items-center gap-6">
             <Link
               to="/"
-              className={`text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                 location.pathname === '/'
                   ? 'text-discord-accent'
                   : 'text-discord-muted hover:text-white'
               }`}
             >
-              🏠 Feed
+              <Home size={15} /> Feed
             </Link>
             <Link
               to="/admin"
-              className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg transition-all ${
                 location.pathname === '/admin'
                   ? 'bg-discord-accent text-white'
                   : 'bg-discord-card text-discord-muted hover:bg-discord-accent hover:text-white'
               }`}
             >
-              ⚙️ Admin
+              <Settings size={15} /> Admin
             </Link>
           </div>
 
@@ -53,7 +54,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(!menuOpen)}
             className="sm:hidden text-discord-muted hover:text-white p-2"
           >
-            {menuOpen ? '✕' : '☰'}
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
@@ -63,16 +64,16 @@ export default function Navbar() {
             <Link
               to="/"
               onClick={() => setMenuOpen(false)}
-              className="text-discord-muted hover:text-white py-2"
+              className="flex items-center gap-2 text-discord-muted hover:text-white py-2"
             >
-              🏠 Feed
+              <Home size={15} /> Feed
             </Link>
             <Link
               to="/admin"
               onClick={() => setMenuOpen(false)}
-              className="text-discord-muted hover:text-white py-2"
+              className="flex items-center gap-2 text-discord-muted hover:text-white py-2"
             >
-              ⚙️ Admin
+              <Settings size={15} /> Admin
             </Link>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Trash2, User, CalendarDays, Copy } from 'lucide-react'
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 
@@ -43,9 +44,9 @@ export default function PostDetail() {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="text-discord-muted hover:text-white transition-colors flex items-center gap-2"
+          className="flex items-center gap-2 text-discord-muted hover:text-white transition-colors"
         >
-          ← voltar
+          <ArrowLeft size={16} /> voltar
         </button>
         {admin && (
           <button
@@ -58,14 +59,13 @@ export default function PostDetail() {
             className="flex items-center gap-2 text-sm bg-red-900/40 border border-red-500/40 text-red-400
                        hover:bg-red-900/70 transition px-3 py-1.5 rounded-lg"
           >
-            🗑️ Excluir post
+            <Trash2 size={14} /> Excluir post
           </button>
         )}
       </div>
 
       {/* Card */}
       <div className="bg-discord-surface border border-discord-card rounded-2xl overflow-hidden">
-        {/* Image */}
         {imageUrl && (
           <div className="bg-discord-bg">
             <img
@@ -76,18 +76,16 @@ export default function PostDetail() {
           </div>
         )}
 
-        {/* Content */}
         <div className="p-6">
           <div className="flex items-start justify-between gap-4 mb-3">
             <h1 className="text-2xl font-bold text-white leading-tight">{title}</h1>
-            <span className="text-2xl shrink-0">{TYPE_EMOJI[type]}</span>
+            <span className="shrink-0 text-2xl">{TYPE_EMOJI[type]}</span>
           </div>
 
           {description && (
             <p className="text-discord-muted text-base mb-4 leading-relaxed">{description}</p>
           )}
 
-          {/* Tags */}
           {tags.length > 0 && (
             <div className="flex gap-2 flex-wrap mb-4">
               {tags.map((tag) => (
@@ -101,11 +99,10 @@ export default function PostDetail() {
             </div>
           )}
 
-          {/* Meta */}
           <div className="flex items-center gap-3 text-sm text-discord-muted pt-4 border-t border-discord-card">
-            <span>👤 {author || 'admin'}</span>
-            <span>•</span>
-            <span>📅 {date}</span>
+            <span className="flex items-center gap-1.5"><User size={13} /> {author || 'admin'}</span>
+            <span>·</span>
+            <span className="flex items-center gap-1.5"><CalendarDays size={13} /> {date}</span>
           </div>
         </div>
       </div>
@@ -118,13 +115,12 @@ export default function PostDetail() {
             navigator.clipboard.writeText(window.location.href)
             alert('Link copiado!')
           }}
-          className="text-xs bg-discord-accent text-white px-3 py-1.5 rounded-lg hover:opacity-80 transition shrink-0"
+          className="flex items-center gap-1.5 text-xs bg-discord-accent text-white px-3 py-1.5 rounded-lg hover:opacity-80 transition shrink-0"
         >
-          copiar link
+          <Copy size={12} /> copiar link
         </button>
       </div>
 
-      {/* Comentários */}
       <Comments postId={post.id} />
     </div>
   )

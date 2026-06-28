@@ -1,13 +1,8 @@
 import { Link } from 'react-router-dom'
-import { MessageCircle, CalendarDays, Laugh, Camera, Clapperboard, Pin, ArrowRight } from 'lucide-react'
+import { MessageCircle, CalendarDays, ArrowRight } from 'lucide-react'
 import { useComments } from '../hooks/useComments'
 
-const TYPE_ICON = {
-  meme: <Laugh size={15} />,
-  foto: <Camera size={15} />,
-  gif:  <Clapperboard size={15} />,
-  outro: <Pin size={15} />,
-}
+const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', outro: '📌' }
 
 function CommentCount({ postId }) {
   const { comments } = useComments(postId)
@@ -37,7 +32,7 @@ export default function FeedPostCard({ post, index }) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-discord-card">
         <div className="flex items-center gap-1.5 text-discord-muted text-xs font-medium uppercase tracking-wide">
-          {TYPE_ICON[type]}
+          <span>{TYPE_EMOJI[type]}</span>
           <span>{type}</span>
         </div>
         <span className="flex items-center gap-1.5 text-discord-muted text-xs">
