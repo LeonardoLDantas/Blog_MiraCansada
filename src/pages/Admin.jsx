@@ -294,13 +294,6 @@ export default function Admin() {
   )
 }
 
-const TYPE_OPTIONS = [
-  { value: 'meme', emoji: '😂' },
-  { value: 'foto', emoji: '📸' },
-  { value: 'gif',  emoji: '🎬' },
-  { value: 'outro',emoji: '📌' },
-]
-
 function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
