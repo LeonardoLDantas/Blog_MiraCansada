@@ -1,16 +1,20 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
-import { Home, Menu, X } from 'lucide-react'
+import { Home, Menu, X, Ghost } from 'lucide-react'
 
 export default function Navbar() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
+  const navLinks = [
+    { to: '/',      label: 'Feed',             Icon: Home  },
+    { to: '/mural', label: 'Mural da Saudade', Icon: Ghost },
+  ]
+
   return (
     <nav className="bg-discord-surface border-b border-discord-card sticky top-0 z-50 shadow-lg">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <img
               src="/Blog_MiraCansada/logo.png"
@@ -25,21 +29,22 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-6">
-            <Link
-              to="/"
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                location.pathname === '/'
-                  ? 'text-discord-accent'
-                  : 'text-discord-muted hover:text-white'
-              }`}
-            >
-              <Home size={15} /> Feed
-            </Link>
+            {navLinks.map(({ to, label, Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                  location.pathname === to
+                    ? 'text-discord-accent'
+                    : 'text-discord-muted hover:text-white'
+                }`}
+              >
+                <Icon size={15} /> {label}
+              </Link>
+            ))}
           </div>
 
-          {/* Mobile menu button */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="sm:hidden text-discord-muted hover:text-white p-2"
@@ -48,16 +53,20 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
           <div className="sm:hidden pb-4 flex flex-col gap-3">
-            <Link
-              to="/"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2 text-discord-muted hover:text-white py-2"
-            >
-              <Home size={15} /> Feed
-            </Link>
+            {navLinks.map(({ to, label, Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center gap-2 py-2 text-sm ${
+                  location.pathname === to ? 'text-discord-accent' : 'text-discord-muted hover:text-white'
+                }`}
+              >
+                <Icon size={15} /> {label}
+              </Link>
+            ))}
           </div>
         )}
       </div>

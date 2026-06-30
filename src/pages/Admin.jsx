@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar, Settings, PenLine, ClipboardList, LogOut, Send, Pencil, Check, X } from 'lucide-react'
+import { Trash2, MessageCircle, ChevronDown, ChevronUp, Settings, PenLine, ClipboardList, LogOut, Send, Pencil, Check, X, Ghost, HeartCrack } from 'lucide-react'
 import { usePosts } from '../hooks/usePosts'
+import { useMural } from '../hooks/useMural'
 import Comments from '../components/Comments'
 
-// Hashes SHA-256 — um secret por usuário no GitHub
 const ADMIN_HASHES = {
   admin:   import.meta.env.VITE_H_ADMIN,
   cripitu: import.meta.env.VITE_H_CRIPITU,
@@ -18,10 +18,10 @@ async function hashPassword(password) {
 }
 
 const TYPE_OPTIONS = [
-  { value: 'meme',  label: 'Meme',  emoji: '😂' },
-  { value: 'foto',  label: 'Foto',  emoji: '📸' },
-  { value: 'gif',   label: 'GIF',   emoji: '🎬' },
-  { value: 'outro', label: 'Outro', emoji: '📌' },
+  { value: 'meme',  label: 'Meme',  emoji: '\u{1F602}' },
+  { value: 'foto',  label: 'Foto',  emoji: '\u{1F4F8}' },
+  { value: 'gif',   label: 'GIF',   emoji: '\u{1F3AC}' },
+  { value: 'outro', label: 'Outro', emoji: '\u{1F4CC}' },
 ]
 
 export default function Admin() {
@@ -32,6 +32,7 @@ export default function Admin() {
   const loggedUser = sessionStorage.getItem('mc_admin_user') || ''
 
   const { posts, loading, addPost, deletePost, updatePost } = usePosts()
+  const { entries: muralEntries, loading: muralLoading, addEntry, deleteEntry } = useMural()
 
   const [form, setForm] = useState({ title: '', description: '', imageUrl: '', type: 'meme', tags: '' })
   const [saving, setSaving] = useState(false)
@@ -41,7 +42,12 @@ export default function Admin() {
   const [page, setPage] = useState(0)
   const PAGE_SIZE = 10
 
-  // — Login —
+  const [muralForm, setMuralForm] = useState({ name: '', description: '', imageUrl: '', reason: 'desaparecido' })
+  const [muralSaving, setMuralSaving] = useState(false)
+  const [muralSuccess, setMuralSuccess] = useState('')
+  const [muralError, setMuralError] = useState('')
+  const [muralConfirm, setMuralConfirm] = useState(null)
+
   const handleLogin = async (e) => {
     e.preventDefault()
     const user = username.trim().toLowerCase()
@@ -61,13 +67,39 @@ export default function Admin() {
     setAuthed(false)
   }
 
-  // — Criar post —
+  const handleMuralSubmit = async (e) => {
+    e.preventDefault()
+    setMuralError('')
+    if (!muralForm.name.trim()) return setMuralError('nome é obrigatório')
+    setMuralSaving(true)
+    try {
+      await addEntry({
+        name:        muralForm.name.trim(),
+        description: muralForm.description.trim(),
+        imageUrl:    muralForm.imageUrl.trim(),
+        reason:      muralForm.reason,
+      })
+      setMuralForm({ name: '', description: '', imageUrl: '', reason: 'desaparecido' })
+      setMuralSuccess('Guerreiro adicionado ao mural!')
+      setTimeout(() => setMuralSuccess(''), 3000)
+    } catch (err) {
+      setMuralError('Erro: ' + err.message)
+    } finally {
+      setMuralSaving(false)
+    }
+  }
+
+  const handleMuralDelete = async (id) => {
+    if (muralConfirm !== id) { setMuralConfirm(id); return }
+    await deleteEntry(id)
+    setMuralConfirm(null)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError('')
     if (!form.title.trim())    return setFormError('título é obrigatório')
     if (!form.imageUrl.trim()) return setFormError('URL da imagem é obrigatória')
-
     setSaving(true)
     try {
       await addPost({
@@ -79,7 +111,7 @@ export default function Admin() {
         author:      loggedUser || 'admin',
       })
       setForm({ title: '', description: '', imageUrl: '', type: 'meme', tags: '' })
-      setSuccess('Post publicado para todos! 🎉')
+      setSuccess('Post publicado!')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
       setFormError('Erro ao salvar: ' + err.message)
@@ -88,7 +120,6 @@ export default function Admin() {
     }
   }
 
-  // — Tela de login —
   if (!authed) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -106,8 +137,7 @@ export default function Admin() {
               placeholder="usuário"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setLoginError('') }}
-              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
-                         rounded-lg px-4 py-3 outline-none focus:border-discord-accent transition-colors"
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-3 outline-none focus:border-discord-accent transition-colors"
               autoFocus
               autoComplete="username"
             />
@@ -116,15 +146,11 @@ export default function Admin() {
               placeholder="senha"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setLoginError('') }}
-              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
-                         rounded-lg px-4 py-3 outline-none focus:border-discord-accent transition-colors"
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-3 outline-none focus:border-discord-accent transition-colors"
               autoComplete="current-password"
             />
             {loginError && <p className="text-discord-accent text-sm">{loginError}</p>}
-            <button
-              type="submit"
-              className="bg-discord-accent text-white font-semibold py-3 rounded-lg hover:opacity-90 transition glow"
-            >
+            <button type="submit" className="bg-discord-accent text-white font-semibold py-3 rounded-lg hover:opacity-90 transition glow">
               entrar
             </button>
           </form>
@@ -133,10 +159,8 @@ export default function Admin() {
     )
   }
 
-  // — Dashboard —
   return (
     <div className="max-w-4xl mx-auto fade-in">
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Settings size={20} /> Painel Admin</h1>
@@ -157,11 +181,10 @@ export default function Admin() {
       )}
 
       <div className="flex flex-col gap-8">
-        {/* — Formulário — */}
+        {/* Novo Post */}
         <div className="bg-discord-surface border border-discord-card rounded-2xl p-6 w-full">
           <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2"><PenLine size={17} /> Novo Post</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {/* Tipo */}
             <div className="flex gap-2 flex-wrap">
               {TYPE_OPTIONS.map(({ value, label, emoji }) => (
                 <button
@@ -178,55 +201,40 @@ export default function Admin() {
                 </button>
               ))}
             </div>
-
             <input
               type="text"
               placeholder="Título *"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
-                         rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
             />
-
             <textarea
               placeholder="Descrição (opcional)"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={3}
-              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
-                         rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors resize-none"
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors resize-none"
             />
-
             <input
               type="url"
-              placeholder="URL da imagem * (Discord CDN, Imgur, etc)"
+              placeholder="URL da imagem *"
               value={form.imageUrl}
               onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
-                         rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
             />
             {form.imageUrl && (
               <div className="rounded-lg overflow-hidden border border-discord-card bg-discord-bg">
-                <img
-                  src={form.imageUrl}
-                  alt="preview"
-                  className="w-full max-h-48 object-contain"
-                  onError={(e) => (e.target.style.display = 'none')}
-                />
+                <img src={form.imageUrl} alt="preview" className="w-full max-h-48 object-contain" onError={(e) => (e.target.style.display = 'none')} />
               </div>
             )}
-
             <input
               type="text"
               placeholder="Tags: funny, gaming (separadas por vírgula)"
               value={form.tags}
               onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
-                         rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
             />
-
             {formError && <p className="text-discord-accent text-sm">{formError}</p>}
-
             <button
               type="submit"
               disabled={saving}
@@ -237,7 +245,93 @@ export default function Admin() {
           </form>
         </div>
 
-        {/* — Lista de posts — */}
+        {/* Mural da Saudade */}
+        <div className="bg-discord-surface border border-purple-500/20 rounded-2xl p-6 w-full">
+          <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
+            <Ghost size={17} className="text-purple-400" /> Mural da Saudade
+          </h2>
+
+          {muralSuccess && (
+            <div className="mb-4 p-3 bg-green-900/40 border border-green-500/40 text-green-400 rounded-lg text-sm">
+              {muralSuccess}
+            </div>
+          )}
+
+          <form onSubmit={handleMuralSubmit} className="flex flex-col gap-3 mb-6">
+            <div className="flex gap-2">
+              {[
+                { value: 'desaparecido', label: 'Desaparecido', Icon: Ghost },
+                { value: 'mulher', label: 'Mulher não deixa', Icon: HeartCrack },
+              ].map(({ value, label, Icon }) => (
+                <button key={value} type="button"
+                  onClick={() => setMuralForm(f => ({ ...f, reason: value }))}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition border ${
+                    muralForm.reason === value
+                      ? 'bg-purple-700 text-white border-purple-500'
+                      : 'bg-discord-bg text-discord-muted border-discord-card hover:text-white'
+                  }`}>
+                  <Icon size={13} /> {label}
+                </button>
+              ))}
+            </div>
+            <input type="text" placeholder="Nome do guerreiro *" value={muralForm.name}
+              onChange={e => setMuralForm(f => ({ ...f, name: e.target.value }))}
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-purple-500 transition-colors" />
+            <textarea placeholder="Último aviso (opcional)" value={muralForm.description} rows={2}
+              onChange={e => setMuralForm(f => ({ ...f, description: e.target.value }))}
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-purple-500 transition-colors resize-none" />
+            <input type="url" placeholder="URL da foto (opcional)" value={muralForm.imageUrl}
+              onChange={e => setMuralForm(f => ({ ...f, imageUrl: e.target.value }))}
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-purple-500 transition-colors" />
+            {muralForm.imageUrl && (
+              <img src={muralForm.imageUrl} alt="preview"
+                className="w-full max-h-36 object-contain rounded-lg border border-discord-card bg-discord-bg"
+                onError={e => e.target.style.display = 'none'} />
+            )}
+            {muralError && <p className="text-red-400 text-sm">{muralError}</p>}
+            <button type="submit" disabled={muralSaving}
+              className="flex items-center gap-2 justify-center bg-purple-700 text-white font-semibold py-2.5 rounded-lg hover:bg-purple-600 transition disabled:opacity-50">
+              <Ghost size={14} /> {muralSaving ? 'adicionando...' : 'Adicionar ao mural'}
+            </button>
+          </form>
+
+          {muralLoading ? (
+            <p className="text-discord-muted text-sm text-center py-4">carregando...</p>
+          ) : muralEntries.length === 0 ? (
+            <p className="text-discord-muted text-sm text-center py-4">nenhum guerreiro perdido ainda</p>
+          ) : (
+            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+              {muralEntries.map(entry => (
+                <div key={entry.id} className="flex items-center gap-3 bg-discord-bg border border-discord-card rounded-xl p-3">
+                  {entry.imageUrl && (
+                    <img src={entry.imageUrl} alt={entry.name}
+                      className="w-10 h-10 rounded-full object-cover shrink-0 grayscale"
+                      onError={e => e.target.style.display = 'none'} />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-semibold truncate">{entry.name}</p>
+                    <p className="text-discord-muted text-xs">{entry.reason === 'mulher' ? 'mulher nao deixa' : 'desaparecido'}</p>
+                  </div>
+                  {muralConfirm === entry.id ? (
+                    <div className="flex gap-1">
+                      <button onClick={() => handleMuralDelete(entry.id)}
+                        className="px-2 py-1 rounded text-xs bg-red-600 text-white hover:bg-red-500 transition">confirmar</button>
+                      <button onClick={() => setMuralConfirm(null)}
+                        className="px-2 py-1 rounded text-xs text-discord-muted border border-discord-card hover:text-white transition">cancelar</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => handleMuralDelete(entry.id)}
+                      className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-900/20 transition">
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Posts publicados */}
         <div className="bg-discord-surface border border-discord-card rounded-2xl p-6 w-full">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <ClipboardList size={17} /> Posts publicados ({posts.length})
@@ -263,7 +357,6 @@ export default function Admin() {
                     />
                   ))}
                 </div>
-
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-discord-card">
                     <button
@@ -271,17 +364,15 @@ export default function Admin() {
                       disabled={page === 0}
                       className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      ← anterior
+                      anterior
                     </button>
-                    <span className="text-discord-muted text-sm">
-                      página {page + 1} de {totalPages}
-                    </span>
+                    <span className="text-discord-muted text-sm">página {page + 1} de {totalPages}</span>
                     <button
                       onClick={() => { setPage(p => p + 1); setExpandedPost(null) }}
                       disabled={page >= totalPages - 1}
                       className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      próximo →
+                      próximo
                     </button>
                   </div>
                 )}
@@ -336,7 +427,6 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
 
   return (
     <div className="rounded-xl bg-discord-bg border border-discord-card">
-      {/* Linha principal */}
       <div className="flex items-center gap-3 p-3">
         <img
           src={post.imageUrl}
@@ -346,14 +436,9 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
         />
         <div className="flex-1 min-w-0">
           <p className="text-white text-sm font-semibold truncate">{post.title}</p>
-          <p className="text-discord-muted text-xs mt-0.5">
-            {post.type} · {post.author || 'admin'} · {date}
-          </p>
+          <p className="text-discord-muted text-xs mt-0.5">{post.type} · {post.author || 'admin'} · {date}</p>
         </div>
-
-        {/* Ações */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Editar */}
           <button
             onClick={() => { setEditing(e => !e); setConfirming(false) }}
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
@@ -364,8 +449,6 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
           >
             <Pencil size={12} /> editar
           </button>
-
-          {/* Comentários */}
           <button
             onClick={onToggle}
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
@@ -377,8 +460,6 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
             <MessageCircle size={12} />
             {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
-
-          {/* Excluir */}
           {confirming ? (
             <div className="flex items-center gap-1">
               <button onClick={handleDelete} disabled={deleting}
@@ -399,12 +480,9 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
         </div>
       </div>
 
-      {/* Form de edição */}
       {editing && (
         <div className="border-t border-discord-card p-4 bg-discord-surface flex flex-col gap-3">
           <p className="text-xs font-semibold text-discord-accent uppercase tracking-wide">Editando post</p>
-
-          {/* Tipo */}
           <div className="flex gap-2 flex-wrap">
             {TYPE_OPTIONS.map(({ value, emoji }) => (
               <button key={value} type="button"
@@ -418,29 +496,23 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
               </button>
             ))}
           </div>
-
           <input type="text" placeholder="Título *" value={editForm.title}
             onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
-
           <textarea placeholder="Descrição (opcional)" value={editForm.description} rows={2}
             onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors resize-none" />
-
           <input type="url" placeholder="URL da imagem *" value={editForm.imageUrl}
             onChange={e => setEditForm(f => ({ ...f, imageUrl: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
-
           {editForm.imageUrl && (
             <img src={editForm.imageUrl} alt="preview"
               className="w-full max-h-36 object-contain rounded-lg border border-discord-card bg-discord-bg"
               onError={e => e.target.style.display = 'none'} />
           )}
-
           <input type="text" placeholder="Tags (separadas por vírgula)" value={editForm.tags}
             onChange={e => setEditForm(f => ({ ...f, tags: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
-
           <div className="flex gap-2 justify-end">
             <button onClick={() => setEditing(false)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-discord-muted border border-discord-card hover:text-white transition">
@@ -454,7 +526,6 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
         </div>
       )}
 
-      {/* Comentários */}
       {expanded && (
         <div className="border-t border-discord-card p-4 bg-discord-surface rounded-b-xl">
           <Comments postId={post.id} isAdmin={true} />
