@@ -6,13 +6,18 @@ import { UploadCloud, X, ImageIcon, Link2 } from 'lucide-react'
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MAX_MB = 10
 
-export default function ImageUpload({ value, onChange }) {
-  const [mode, setMode] = useState('upload') // 'upload' | 'url'
+export default function ImageUpload({ value, onChange, onUploadingChange }) {
+  const [mode, setMode] = useState('upload')
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const inputRef = useRef(null)
+
+  const setUploadState = (state) => {
+    setUploading(state)
+    onUploadingChange?.(state)
+  }
 
   const uploadFile = useCallback(async (file) => {
     setError('')
@@ -25,29 +30,44 @@ export default function ImageUpload({ value, onChange }) {
       return
     }
 
-    setUploading(true)
+    setUploadState(true)
     setProgress(0)
+    onChange('')
 
     const ext = file.name.split('.').pop()
     const path = `posts/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const storageRef = ref(storage, path)
-    const task = uploadBytesResumable(storageRef, file)
 
-    task.on(
-      'state_changed',
-      (snap) => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-      (err) => {
-        setError('Erro no upload: ' + err.message)
-        setUploading(false)
-      },
-      async () => {
-        const url = await getDownloadURL(task.snapshot.ref)
-        onChange(url)
-        setUploading(false)
-        setProgress(100)
-      }
-    )
-  }, [onChange])
+    try {
+      const storageRef = ref(storage, path)
+      const task = uploadBytesResumable(storageRef, file)
+
+      task.on(
+        'state_changed',
+        (snap) => {
+          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100)
+          setProgress(pct)
+        },
+        (err) => {
+          console.error('Storage error:', err)
+          if (err.code === 'storage/unauthorized') {
+            setError('Permissão negada. Ative o Firebase Storage no console e configure as regras.')
+          } else {
+            setError('Erro no upload: ' + err.message)
+          }
+          setUploadState(false)
+        },
+        async () => {
+          const url = await getDownloadURL(task.snapshot.ref)
+          onChange(url)
+          setUploadState(false)
+          setProgress(100)
+        }
+      )
+    } catch (err) {
+      setError('Erro ao iniciar upload: ' + err.message)
+      setUploadState(false)
+    }
+  }, [onChange, onUploadingChange])
 
   const handleDrop = useCallback((e) => {
     e.preventDefault()
@@ -66,7 +86,7 @@ export default function ImageUpload({ value, onChange }) {
       <div className="flex gap-1 bg-discord-bg rounded-lg p-1 w-fit">
         <button
           type="button"
-          onClick={() => setMode('upload')}
+          onClick={() => { setMode('upload'); setError('') }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition ${
             mode === 'upload' ? 'bg-discord-accent text-white' : 'text-discord-muted hover:text-white'
           }`}
@@ -75,7 +95,7 @@ export default function ImageUpload({ value, onChange }) {
         </button>
         <button
           type="button"
-          onClick={() => setMode('url')}
+          onClick={() => { setMode('url'); setError('') }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition ${
             mode === 'url' ? 'bg-discord-accent text-white' : 'text-discord-muted hover:text-white'
           }`}
@@ -85,49 +105,58 @@ export default function ImageUpload({ value, onChange }) {
       </div>
 
       {mode === 'upload' ? (
-        <>
-          {/* Drop zone */}
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onClick={() => !uploading && inputRef.current?.click()}
-            className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-              dragging
-                ? 'border-discord-accent bg-discord-accent/10'
-                : 'border-discord-card hover:border-discord-accent/60 bg-discord-bg'
-            } ${uploading ? 'cursor-not-allowed opacity-70' : ''}`}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept={ACCEPTED.join(',')}
-              className="hidden"
-              onChange={handleFileInput}
-            />
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => !uploading && !value && inputRef.current?.click()}
+          className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
+            dragging
+              ? 'border-discord-accent bg-discord-accent/10'
+              : 'border-discord-card hover:border-discord-accent/60 bg-discord-bg'
+          } ${uploading ? 'cursor-not-allowed opacity-70' : value ? 'cursor-default' : 'cursor-pointer'}`}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept={ACCEPTED.join(',')}
+            className="hidden"
+            onChange={handleFileInput}
+          />
 
-            {uploading ? (
-              <div className="flex flex-col items-center gap-3">
-                <UploadCloud size={28} className="text-discord-accent animate-bounce" />
-                <p className="text-white text-sm font-medium">enviando... {progress}%</p>
-                <div className="w-full bg-discord-card rounded-full h-1.5">
-                  <div
-                    className="bg-discord-accent h-1.5 rounded-full transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
+          {uploading ? (
+            <div className="flex flex-col items-center gap-3">
+              <UploadCloud size={28} className="text-discord-accent animate-bounce" />
+              <p className="text-white text-sm font-medium">enviando... {progress}%</p>
+              <div className="w-full bg-discord-card rounded-full h-1.5">
+                <div
+                  className="bg-discord-accent h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <ImageIcon size={28} className="text-discord-muted" />
-                <p className="text-white text-sm font-medium">
-                  {dragging ? 'Solte aqui!' : 'Arraste a imagem ou clique para selecionar'}
-                </p>
-                <p className="text-discord-muted text-xs">JPG, PNG, GIF, WebP · máx {MAX_MB}MB</p>
-              </div>
-            )}
-          </div>
-        </>
+            </div>
+          ) : value ? (
+            <div className="flex flex-col items-center gap-2">
+              <ImageIcon size={20} className="text-green-400" />
+              <p className="text-green-400 text-sm font-medium">imagem enviada!</p>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onChange(''); setProgress(0) }}
+                className="text-xs text-discord-muted hover:text-red-400 underline transition"
+              >
+                trocar imagem
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <ImageIcon size={28} className="text-discord-muted" />
+              <p className="text-white text-sm font-medium">
+                {dragging ? 'Solte aqui!' : 'Arraste a imagem ou clique para selecionar'}
+              </p>
+              <p className="text-discord-muted text-xs">JPG, PNG, GIF, WebP · máx {MAX_MB}MB</p>
+            </div>
+          )}
+        </div>
       ) : (
         <input
           type="url"
@@ -139,10 +168,14 @@ export default function ImageUpload({ value, onChange }) {
         />
       )}
 
-      {error && <p className="text-red-400 text-xs">{error}</p>}
+      {error && (
+        <p className="text-red-400 text-xs bg-red-900/20 border border-red-500/30 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
 
-      {/* Preview */}
-      {value && !uploading && (
+      {/* Preview URL mode */}
+      {mode === 'url' && value && (
         <div className="relative rounded-lg overflow-hidden border border-discord-card bg-discord-bg">
           <img
             src={value}

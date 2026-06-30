@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar, Settings, PenLine, ClipboardList, LogOut, Send } from 'lucide-react'
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
-import ImageUpload from '../components/ImageUpload'
 
 // Hashes SHA-256 — um secret por usuário no GitHub
 const ADMIN_HASHES = {
@@ -198,10 +197,24 @@ export default function Admin() {
                          rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors resize-none"
             />
 
-            <ImageUpload
+            <input
+              type="url"
+              placeholder="URL da imagem * (Discord CDN, Imgur, etc)"
               value={form.imageUrl}
-              onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
+              onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
+              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted
+                         rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
             />
+            {form.imageUrl && (
+              <div className="rounded-lg overflow-hidden border border-discord-card bg-discord-bg">
+                <img
+                  src={form.imageUrl}
+                  alt="preview"
+                  className="w-full max-h-48 object-contain"
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+              </div>
+            )}
 
             <input
               type="text"
