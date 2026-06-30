@@ -4,6 +4,7 @@ import {
   onSnapshot,
   addDoc,
   deleteDoc,
+  updateDoc,
   doc,
   orderBy,
   query,
@@ -47,5 +48,9 @@ export function usePosts() {
     await deleteDoc(doc(db, POSTS_COL, id))
   }
 
-  return { posts, loading, addPost, deletePost }
+  const updatePost = async (id, data) => {
+    await updateDoc(doc(db, POSTS_COL, id), data)
+  }
+
+  return { posts, loading, addPost, deletePost, updatePost }
 }

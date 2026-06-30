@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar, Settings, PenLine, ClipboardList, LogOut, Send } from 'lucide-react'
+import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar, Settings, PenLine, ClipboardList, LogOut, Send, Pencil, Check, X } from 'lucide-react'
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 
@@ -31,7 +31,7 @@ export default function Admin() {
   const [loginError, setLoginError] = useState('')
   const loggedUser = sessionStorage.getItem('mc_admin_user') || ''
 
-  const { posts, loading, addPost, deletePost } = usePosts()
+  const { posts, loading, addPost, deletePost, updatePost } = usePosts()
 
   const [form, setForm] = useState({ title: '', description: '', imageUrl: '', type: 'meme', tags: '' })
   const [saving, setSaving] = useState(false)
@@ -259,6 +259,7 @@ export default function Admin() {
                       expanded={expandedPost === post.id}
                       onToggle={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
                       onDelete={deletePost}
+                      onUpdate={updatePost}
                     />
                   ))}
                 </div>
@@ -293,9 +294,25 @@ export default function Admin() {
   )
 }
 
-function PostAdminCard({ post, expanded, onToggle, onDelete }) {
+const TYPE_OPTIONS = [
+  { value: 'meme', emoji: '😂' },
+  { value: 'foto', emoji: '📸' },
+  { value: 'gif',  emoji: '🎬' },
+  { value: 'outro',emoji: '📌' },
+]
+
+function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [editForm, setEditForm] = useState({
+    title: post.title,
+    description: post.description || '',
+    imageUrl: post.imageUrl,
+    type: post.type || 'meme',
+    tags: (post.tags || []).join(', '),
+  })
 
   const date = post.createdAt?.toDate
     ? post.createdAt.toDate().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -304,28 +321,36 @@ function PostAdminCard({ post, expanded, onToggle, onDelete }) {
   const handleDelete = async () => {
     if (!confirming) { setConfirming(true); return }
     setDeleting(true)
+    try { await onDelete(post.id) }
+    catch (e) { console.error(e); setDeleting(false); setConfirming(false) }
+  }
+
+  const handleSave = async () => {
+    if (!editForm.title.trim() || !editForm.imageUrl.trim()) return
+    setSaving(true)
     try {
-      await onDelete(post.id)
-    } catch (e) {
-      console.error(e)
-      setDeleting(false)
-      setConfirming(false)
-    }
+      await onUpdate(post.id, {
+        title:       editForm.title.trim(),
+        description: editForm.description.trim(),
+        imageUrl:    editForm.imageUrl.trim(),
+        type:        editForm.type,
+        tags:        editForm.tags.split(',').map(t => t.trim()).filter(Boolean),
+      })
+      setEditing(false)
+    } catch (e) { console.error(e) }
+    finally { setSaving(false) }
   }
 
   return (
     <div className="rounded-xl bg-discord-bg border border-discord-card">
       {/* Linha principal */}
       <div className="flex items-center gap-3 p-3">
-        {/* Thumbnail */}
         <img
           src={post.imageUrl}
           alt=""
           className="w-14 h-14 rounded-lg object-cover shrink-0 bg-discord-card"
           onError={(e) => { e.target.style.display = 'none' }}
         />
-
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <p className="text-white text-sm font-semibold truncate">{post.title}</p>
           <p className="text-discord-muted text-xs mt-0.5">
@@ -335,6 +360,19 @@ function PostAdminCard({ post, expanded, onToggle, onDelete }) {
 
         {/* Ações */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Editar */}
+          <button
+            onClick={() => { setEditing(e => !e); setConfirming(false) }}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
+              editing
+                ? 'bg-discord-accent/20 text-discord-accent border-discord-accent/30'
+                : 'text-discord-muted border-discord-card hover:text-white'
+            }`}
+          >
+            <Pencil size={12} /> editar
+          </button>
+
+          {/* Comentários */}
           <button
             onClick={onToggle}
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
@@ -347,35 +385,83 @@ function PostAdminCard({ post, expanded, onToggle, onDelete }) {
             {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
 
+          {/* Excluir */}
           {confirming ? (
             <div className="flex items-center gap-1">
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-500 transition disabled:opacity-50"
-              >
+              <button onClick={handleDelete} disabled={deleting}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-500 transition disabled:opacity-50">
                 {deleting ? '...' : 'confirmar'}
               </button>
-              <button
-                onClick={() => setConfirming(false)}
-                className="px-2.5 py-1.5 rounded-lg text-xs text-discord-muted border border-discord-card hover:text-white transition"
-              >
+              <button onClick={() => setConfirming(false)}
+                className="px-2.5 py-1.5 rounded-lg text-xs text-discord-muted border border-discord-card hover:text-white transition">
                 cancelar
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => setConfirming(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400 border border-discord-card hover:bg-red-900/30 hover:border-red-500/40 transition"
-            >
-              <Trash2 size={12} />
-              excluir
+            <button onClick={() => setConfirming(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400 border border-discord-card hover:bg-red-900/30 hover:border-red-500/40 transition">
+              <Trash2 size={12} /> excluir
             </button>
           )}
         </div>
       </div>
 
-      {/* Comentários expandidos */}
+      {/* Form de edição */}
+      {editing && (
+        <div className="border-t border-discord-card p-4 bg-discord-surface flex flex-col gap-3">
+          <p className="text-xs font-semibold text-discord-accent uppercase tracking-wide">Editando post</p>
+
+          {/* Tipo */}
+          <div className="flex gap-2 flex-wrap">
+            {TYPE_OPTIONS.map(({ value, emoji }) => (
+              <button key={value} type="button"
+                onClick={() => setEditForm(f => ({ ...f, type: value }))}
+                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs transition border ${
+                  editForm.type === value
+                    ? 'bg-discord-accent text-white border-discord-accent'
+                    : 'text-discord-muted border-discord-card hover:text-white'
+                }`}>
+                {emoji} {value}
+              </button>
+            ))}
+          </div>
+
+          <input type="text" placeholder="Título *" value={editForm.title}
+            onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+            className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
+
+          <textarea placeholder="Descrição (opcional)" value={editForm.description} rows={2}
+            onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+            className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors resize-none" />
+
+          <input type="url" placeholder="URL da imagem *" value={editForm.imageUrl}
+            onChange={e => setEditForm(f => ({ ...f, imageUrl: e.target.value }))}
+            className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
+
+          {editForm.imageUrl && (
+            <img src={editForm.imageUrl} alt="preview"
+              className="w-full max-h-36 object-contain rounded-lg border border-discord-card bg-discord-bg"
+              onError={e => e.target.style.display = 'none'} />
+          )}
+
+          <input type="text" placeholder="Tags (separadas por vírgula)" value={editForm.tags}
+            onChange={e => setEditForm(f => ({ ...f, tags: e.target.value }))}
+            className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
+
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setEditing(false)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-discord-muted border border-discord-card hover:text-white transition">
+              <X size={12} /> cancelar
+            </button>
+            <button onClick={handleSave} disabled={saving}
+              className="flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-medium bg-discord-accent text-white hover:opacity-90 transition disabled:opacity-50">
+              <Check size={12} /> {saving ? 'salvando...' : 'salvar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Comentários */}
       {expanded && (
         <div className="border-t border-discord-card p-4 bg-discord-surface rounded-b-xl">
           <Comments postId={post.id} isAdmin={true} />
