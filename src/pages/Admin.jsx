@@ -4,8 +4,14 @@ import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 import ImageUpload from '../components/ImageUpload'
 
-// Hashes SHA-256 carregados via variável de ambiente (nunca plaintext no bundle)
-const ADMIN_HASHES = JSON.parse(import.meta.env.VITE_ADMIN_USERS || '{}')
+// Hashes SHA-256 — um secret por usuário no GitHub
+const ADMIN_HASHES = {
+  admin:   import.meta.env.VITE_H_ADMIN,
+  cripitu: import.meta.env.VITE_H_CRIPITU,
+  careca:  import.meta.env.VITE_H_CARECA,
+  matheus: import.meta.env.VITE_H_MATHEUS,
+  titoe:   import.meta.env.VITE_H_TITOE,
+}
 
 async function hashPassword(password) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password))

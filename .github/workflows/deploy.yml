@@ -38,7 +38,11 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET:     ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID:             ${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_ADMIN_USERS:                 ${{ secrets.VITE_ADMIN_USERS }}
+          VITE_H_ADMIN:                     ${{ secrets.VITE_H_ADMIN }}
+          VITE_H_CRIPITU:                   ${{ secrets.VITE_H_CRIPITU }}
+          VITE_H_CARECA:                    ${{ secrets.VITE_H_CARECA }}
+          VITE_H_MATHEUS:                   ${{ secrets.VITE_H_MATHEUS }}
+          VITE_H_TITOE:                     ${{ secrets.VITE_H_TITOE }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
