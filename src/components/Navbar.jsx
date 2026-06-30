@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
-import { Home, Settings, Menu, X } from 'lucide-react'
+import { Home, Menu, X } from 'lucide-react'
 
 export default function Navbar() {
   const location = useLocation()
@@ -37,16 +37,6 @@ export default function Navbar() {
             >
               <Home size={15} /> Feed
             </Link>
-            <Link
-              to="/admin"
-              className={`flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg transition-all ${
-                location.pathname === '/admin'
-                  ? 'bg-discord-accent text-white'
-                  : 'bg-discord-card text-discord-muted hover:bg-discord-accent hover:text-white'
-              }`}
-            >
-              <Settings size={15} /> Admin
-            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -67,13 +57,6 @@ export default function Navbar() {
               className="flex items-center gap-2 text-discord-muted hover:text-white py-2"
             >
               <Home size={15} /> Feed
-            </Link>
-            <Link
-              to="/admin"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2 text-discord-muted hover:text-white py-2"
-            >
-              <Settings size={15} /> Admin
             </Link>
           </div>
         )}

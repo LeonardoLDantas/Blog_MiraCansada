@@ -3,11 +3,12 @@ import { Trash2, MessageCircle, ChevronDown, ChevronUp, User, Calendar, Settings
 import { usePosts } from '../hooks/usePosts'
 import Comments from '../components/Comments'
 
-// Usuários admin
-const ADMIN_USERS = {
-  admin:   'miracansada@2024',
-  cripitu: 'miracansada2026',
-  careca:  'Laker2045@',
+// Hashes SHA-256 carregados via variável de ambiente (nunca plaintext no bundle)
+const ADMIN_HASHES = JSON.parse(import.meta.env.VITE_ADMIN_USERS || '{}')
+
+async function hashPassword(password) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 const TYPE_OPTIONS = [
@@ -36,15 +37,16 @@ export default function Admin() {
   const PAGE_SIZE = 10
 
   // — Login —
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     const user = username.trim().toLowerCase()
-    if (ADMIN_USERS[user] && ADMIN_USERS[user] === password) {
+    const hash = await hashPassword(password)
+    if (ADMIN_HASHES[user] && ADMIN_HASHES[user] === hash) {
       sessionStorage.setItem('mc_admin', '1')
       sessionStorage.setItem('mc_admin_user', user)
       setAuthed(true)
     } else {
-      setLoginError('usuário ou senha incorretos 🎯')
+      setLoginError('usuário ou senha incorretos')
     }
   }
 
