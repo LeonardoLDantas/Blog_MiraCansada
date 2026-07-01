@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Trash2, MessageCircle, ChevronDown, ChevronUp, Settings, PenLine, ClipboardList, LogOut, Send, Pencil, Check, X, Ghost, HeartCrack } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Trash2, MessageCircle, ChevronDown, ChevronUp, Settings, PenLine, ClipboardList, LogOut, Send, Pencil, Check, X, Ghost, HeartCrack, Loader2 } from 'lucide-react'
 import { usePosts } from '../hooks/usePosts'
 import { useMural } from '../hooks/useMural'
 import Comments from '../components/Comments'
@@ -12,9 +12,18 @@ const ADMIN_HASHES = {
   titoe:   import.meta.env.VITE_H_TITOE,
 }
 
-async function hashPassword(password) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password))
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function hashPassword(password) {
+  return sha256(password)
+}
+
+// Token = hash(username + passwordHash) — impossivel de forjar sem conhecer o hash
+async function generateToken(username, passwordHash) {
+  return sha256(username + '|' + passwordHash)
 }
 
 const TYPE_OPTIONS = [
@@ -25,7 +34,8 @@ const TYPE_OPTIONS = [
 ]
 
 export default function Admin() {
-  const [authed, setAuthed] = useState(() => !!sessionStorage.getItem('mc_admin_user'))
+  const [authed, setAuthed] = useState(false)
+  const [verifying, setVerifying] = useState(true)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -48,29 +58,55 @@ export default function Admin() {
   const [muralError, setMuralError] = useState('')
   const [muralConfirm, setMuralConfirm] = useState(null)
 
+  // Verificacao criptrografica na carga da pagina
+  // Mesmo que alguem force sessionStorage via console, o token nao vai bater
+  useEffect(() => {
+    const verify = async () => {
+      const user = sessionStorage.getItem('mc_admin_user')
+      const storedToken = sessionStorage.getItem('mc_admin_token')
+      if (user && storedToken && ADMIN_HASHES[user]) {
+        const expectedToken = await generateToken(user, ADMIN_HASHES[user])
+        if (expectedToken === storedToken) {
+          setAuthed(true)
+        } else {
+          clearSession()
+        }
+      }
+      setVerifying(false)
+    }
+    verify()
+  }, [])
+
+  const clearSession = () => {
+    sessionStorage.removeItem('mc_admin')
+    sessionStorage.removeItem('mc_admin_user')
+    sessionStorage.removeItem('mc_admin_token')
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
     const user = username.trim().toLowerCase()
     const hash = await hashPassword(password)
     if (ADMIN_HASHES[user] && ADMIN_HASHES[user] === hash) {
+      const token = await generateToken(user, hash)
       sessionStorage.setItem('mc_admin', '1')
       sessionStorage.setItem('mc_admin_user', user)
+      sessionStorage.setItem('mc_admin_token', token)
       setAuthed(true)
     } else {
-      setLoginError('usuário ou senha incorretos')
+      setLoginError('usuario ou senha incorretos')
     }
   }
 
   const handleLogout = () => {
-    sessionStorage.removeItem('mc_admin')
-    sessionStorage.removeItem('mc_admin_user')
+    clearSession()
     setAuthed(false)
   }
 
   const handleMuralSubmit = async (e) => {
     e.preventDefault()
     setMuralError('')
-    if (!muralForm.name.trim()) return setMuralError('nome é obrigatório')
+    if (!muralForm.name.trim()) return setMuralError('nome e obrigatorio')
     setMuralSaving(true)
     try {
       await addEntry({
@@ -98,8 +134,8 @@ export default function Admin() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError('')
-    if (!form.title.trim())    return setFormError('título é obrigatório')
-    if (!form.imageUrl.trim()) return setFormError('URL da imagem é obrigatória')
+    if (!form.title.trim())    return setFormError('titulo e obrigatorio')
+    if (!form.imageUrl.trim()) return setFormError('URL da imagem e obrigatoria')
     setSaving(true)
     try {
       await addPost({
@@ -120,6 +156,15 @@ export default function Admin() {
     }
   }
 
+  // Enquanto verifica o token, mostra loading
+  if (verifying) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 size={28} className="text-discord-accent animate-spin" />
+      </div>
+    )
+  }
+
   if (!authed) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -134,7 +179,7 @@ export default function Admin() {
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <input
               type="text"
-              placeholder="usuário"
+              placeholder="usuario"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setLoginError('') }}
               className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-3 outline-none focus:border-discord-accent transition-colors"
@@ -203,13 +248,13 @@ export default function Admin() {
             </div>
             <input
               type="text"
-              placeholder="Título *"
+              placeholder="Titulo *"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
             />
             <textarea
-              placeholder="Descrição (opcional)"
+              placeholder="Descricao (opcional)"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={3}
@@ -229,7 +274,7 @@ export default function Admin() {
             )}
             <input
               type="text"
-              placeholder="Tags: funny, gaming (separadas por vírgula)"
+              placeholder="Tags: funny, gaming (separadas por virgula)"
               value={form.tags}
               onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
               className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
@@ -261,7 +306,7 @@ export default function Admin() {
             <div className="flex gap-2">
               {[
                 { value: 'desaparecido', label: 'Desaparecido', Icon: Ghost },
-                { value: 'mulher', label: 'Mulher não deixa', Icon: HeartCrack },
+                { value: 'mulher', label: 'Mulher nao deixa', Icon: HeartCrack },
               ].map(({ value, label, Icon }) => (
                 <button key={value} type="button"
                   onClick={() => setMuralForm(f => ({ ...f, reason: value }))}
@@ -277,7 +322,7 @@ export default function Admin() {
             <input type="text" placeholder="Nome do guerreiro *" value={muralForm.name}
               onChange={e => setMuralForm(f => ({ ...f, name: e.target.value }))}
               className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-purple-500 transition-colors" />
-            <textarea placeholder="Último aviso (opcional)" value={muralForm.description} rows={2}
+            <textarea placeholder="Ultimo aviso (opcional)" value={muralForm.description} rows={2}
               onChange={e => setMuralForm(f => ({ ...f, description: e.target.value }))}
               className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-purple-500 transition-colors resize-none" />
             <input type="url" placeholder="URL da foto (opcional)" value={muralForm.imageUrl}
@@ -362,17 +407,17 @@ export default function Admin() {
                     <button
                       onClick={() => { setPage(p => p - 1); setExpandedPost(null) }}
                       disabled={page === 0}
-                      className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       anterior
                     </button>
-                    <span className="text-discord-muted text-sm">página {page + 1} de {totalPages}</span>
+                    <span className="text-discord-muted text-sm">pagina {page + 1} de {totalPages}</span>
                     <button
                       onClick={() => { setPage(p => p + 1); setExpandedPost(null) }}
                       disabled={page >= totalPages - 1}
-                      className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-4 py-2 rounded-lg text-sm font-medium border border-discord-card text-discord-muted hover:text-white hover:border-discord-accent transition disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      próximo
+                      proximo
                     </button>
                   </div>
                 )}
@@ -496,10 +541,10 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
               </button>
             ))}
           </div>
-          <input type="text" placeholder="Título *" value={editForm.title}
+          <input type="text" placeholder="Titulo *" value={editForm.title}
             onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
-          <textarea placeholder="Descrição (opcional)" value={editForm.description} rows={2}
+          <textarea placeholder="Descricao (opcional)" value={editForm.description} rows={2}
             onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors resize-none" />
           <input type="url" placeholder="URL da imagem *" value={editForm.imageUrl}
@@ -510,7 +555,7 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
               className="w-full max-h-36 object-contain rounded-lg border border-discord-card bg-discord-bg"
               onError={e => e.target.style.display = 'none'} />
           )}
-          <input type="text" placeholder="Tags (separadas por vírgula)" value={editForm.tags}
+          <input type="text" placeholder="Tags (separadas por virgula)" value={editForm.tags}
             onChange={e => setEditForm(f => ({ ...f, tags: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
           <div className="flex gap-2 justify-end">
