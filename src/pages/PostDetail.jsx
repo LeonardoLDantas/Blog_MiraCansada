@@ -19,9 +19,9 @@ export default function PostDetail() {
     return (
       <div className="text-center py-20">
         <p className="text-6xl mb-4">🔍</p>
-        <p className="text-xl text-white mb-4">Post não encontrado</p>
+        <p className="text-xl text-white mb-4">Post nao encontrado</p>
         <Link to="/" className="text-discord-accent hover:underline">
-          ← voltar ao feed
+          voltar ao feed
         </Link>
       </div>
     )
@@ -40,7 +40,6 @@ export default function PostDetail() {
 
   return (
     <div className="max-w-3xl mx-auto fade-in">
-      {/* Back + ações admin */}
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigate(-1)}
@@ -51,28 +50,22 @@ export default function PostDetail() {
         {admin && (
           <button
             onClick={() => {
-              if (confirm(`Deletar "${post.title}"?`)) {
+              if (confirm('Deletar "' + post.title + '"?')) {
                 deletePost(post.id)
                 navigate('/')
               }
             }}
-            className="flex items-center gap-2 text-sm bg-red-900/40 border border-red-500/40 text-red-400
-                       hover:bg-red-900/70 transition px-3 py-1.5 rounded-lg"
+            className="flex items-center gap-2 text-sm bg-red-900/40 border border-red-500/40 text-red-400 hover:bg-red-900/70 transition px-3 py-1.5 rounded-lg"
           >
             <Trash2 size={14} /> Excluir post
           </button>
         )}
       </div>
 
-      {/* Card */}
       <div className="bg-discord-surface border border-discord-card rounded-2xl overflow-hidden">
         {imageUrl && (
           <div className="bg-discord-bg">
-            <img
-              src={imageUrl}
-              alt={title}
-              className="w-full max-h-[70vh] object-contain mx-auto"
-            />
+            <img src={imageUrl} alt={title} className="w-full max-h-[70vh] object-contain mx-auto" />
           </div>
         )}
 
@@ -110,14 +103,10 @@ export default function PostDetail() {
         </div>
       </div>
 
-      {/* Share URL */}
       <div className="mt-4 p-3 bg-discord-surface border border-discord-card rounded-lg flex items-center gap-3">
         <span className="text-discord-muted text-sm flex-1 truncate">{window.location.href}</span>
         <button
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href)
-            alert('Link copiado!')
-          }}
+          onClick={() => { navigator.clipboard.writeText(window.location.href); alert('Link copiado!') }}
           className="flex items-center gap-1.5 text-xs bg-discord-accent text-white px-3 py-1.5 rounded-lg hover:opacity-80 transition shrink-0"
         >
           <Copy size={12} /> copiar link

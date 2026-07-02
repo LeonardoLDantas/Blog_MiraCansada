@@ -1,12 +1,15 @@
 {
   "name": "mira-cansada",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "version:patch": "node scripts/bump-version.js patch",
+    "version:minor": "node scripts/bump-version.js minor",
+    "setup-hooks": "node scripts/setup-hooks.js"
   },
   "dependencies": {
     "firebase": "^10.12.2",

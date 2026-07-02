@@ -4,7 +4,7 @@ import PostCard from '../components/PostCard'
 import FeedPostCard from '../components/FeedPostCard'
 import { usePosts } from '../hooks/usePosts'
 
-const TYPES = ['todos', 'meme', 'foto', 'gif', 'outro']
+const TYPES = ['todos', 'meme', 'foto', 'gif', 'noticia', 'fofoca', 'cs', 'games', 'outro']
 const PAGE_SIZE = 5
 
 export default function Home() {
@@ -14,7 +14,6 @@ export default function Home() {
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('mc_view') || 'grid')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef(null)
-
   const topRef = useRef(null)
 
   const setView = (mode) => {
@@ -80,32 +79,28 @@ export default function Home() {
             placeholder="🔍 buscar posts..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-discord-surface border border-discord-card text-white placeholder-discord-muted
-                       rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
+            className="flex-1 bg-discord-surface border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
           />
-          {/* Toggle Grid / Feed */}
-          <div className="flex bg-discord-surface border border-discord-card rounded-lg overflow-hidden shrink-0">
+          <div className="flex items-center gap-1 bg-discord-surface border border-discord-card rounded-xl p-1 shrink-0">
             <button
-              title="Grade"
               onClick={() => setView('grid')}
-              className={`px-3 py-2.5 flex items-center transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'grid'
-                  ? 'bg-discord-accent text-white'
+                  ? 'bg-discord-accent text-white shadow'
                   : 'text-discord-muted hover:text-white'
               }`}
             >
-              <LayoutGrid size={17} />
+              <LayoutGrid size={14} /> Grade
             </button>
             <button
-              title="Feed"
               onClick={() => setView('feed')}
-              className={`px-3 py-2.5 flex items-center border-l border-discord-card transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'feed'
-                  ? 'bg-discord-accent text-white'
+                  ? 'bg-discord-accent text-white shadow'
                   : 'text-discord-muted hover:text-white'
               }`}
             >
-              <List size={17} />
+              <List size={14} /> Feed
             </button>
           </div>
         </div>

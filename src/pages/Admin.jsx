@@ -28,14 +28,14 @@ async function generateToken(username, passwordHash) {
 }
 
 const TYPE_OPTIONS = [
-  { value: 'meme',    label: 'Meme',    emoji: '\u{1F602}' },
-  { value: 'foto',    label: 'Foto',    emoji: '\u{1F4F8}' },
-  { value: 'gif',     label: 'GIF',     emoji: '\u{1F3AC}' },
-  { value: 'noticia', label: 'Noticia', emoji: '\u{1F4F0}' },
-  { value: 'fofoca',  label: 'Fofoca',  emoji: '\u{1F4AC}' },
-  { value: 'cs',      label: 'CS',      emoji: '\u{1F52B}' },
-  { value: 'games',   label: 'Games',   emoji: '\u{1F3AE}' },
-  { value: 'outro',   label: 'Outro',   emoji: '\u{1F4CC}' },
+  { value: 'meme',    label: 'Meme',    emoji: '😂' },
+  { value: 'foto',    label: 'Foto',    emoji: '📸' },
+  { value: 'gif',     label: 'GIF',     emoji: '🎬' },
+  { value: 'noticia', label: 'Noticia', emoji: '📰' },
+  { value: 'fofoca',  label: 'Fofoca',  emoji: '💬' },
+  { value: 'cs',      label: 'CS',      emoji: '🔫' },
+  { value: 'games',   label: 'Games',   emoji: '🎮' },
+  { value: 'outro',   label: 'Outro',   emoji: '📌' },
 ]
 
 export default function Admin() {

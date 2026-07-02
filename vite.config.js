@@ -1,7 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { readFileSync } from 'fs'
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
 export default defineConfig({
   plugins: [react()],
   base: '/Blog_MiraCansada/',
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().split('T')[0]),
+  },
 })
