@@ -3,6 +3,7 @@ import { Trash2, MessageCircle, ChevronDown, ChevronUp, Settings, PenLine, Clipb
 import { usePosts } from '../hooks/usePosts'
 import { useMural } from '../hooks/useMural'
 import Comments from '../components/Comments'
+import RichTextEditor from '../components/RichTextEditor'
 
 const ADMIN_HASHES = {
   admin:   import.meta.env.VITE_H_ADMIN,
@@ -27,10 +28,14 @@ async function generateToken(username, passwordHash) {
 }
 
 const TYPE_OPTIONS = [
-  { value: 'meme',  label: 'Meme',  emoji: '\u{1F602}' },
-  { value: 'foto',  label: 'Foto',  emoji: '\u{1F4F8}' },
-  { value: 'gif',   label: 'GIF',   emoji: '\u{1F3AC}' },
-  { value: 'outro', label: 'Outro', emoji: '\u{1F4CC}' },
+  { value: 'meme',    label: 'Meme',    emoji: '\u{1F602}' },
+  { value: 'foto',    label: 'Foto',    emoji: '\u{1F4F8}' },
+  { value: 'gif',     label: 'GIF',     emoji: '\u{1F3AC}' },
+  { value: 'noticia', label: 'Noticia', emoji: '\u{1F4F0}' },
+  { value: 'fofoca',  label: 'Fofoca',  emoji: '\u{1F4AC}' },
+  { value: 'cs',      label: 'CS',      emoji: '\u{1F52B}' },
+  { value: 'games',   label: 'Games',   emoji: '\u{1F3AE}' },
+  { value: 'outro',   label: 'Outro',   emoji: '\u{1F4CC}' },
 ]
 
 export default function Admin() {
@@ -253,12 +258,10 @@ export default function Admin() {
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors"
             />
-            <textarea
-              placeholder="Descricao (opcional)"
+            <RichTextEditor
               value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={3}
-              className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-4 py-2.5 outline-none focus:border-discord-accent transition-colors resize-none"
+              onChange={(html) => setForm((f) => ({ ...f, description: html }))}
+              placeholder="Descricao (opcional) — use a barra de formatacao acima"
             />
             <input
               type="url"
@@ -544,9 +547,11 @@ function PostAdminCard({ post, expanded, onToggle, onDelete, onUpdate }) {
           <input type="text" placeholder="Titulo *" value={editForm.title}
             onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />
-          <textarea placeholder="Descricao (opcional)" value={editForm.description} rows={2}
-            onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
-            className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors resize-none" />
+          <RichTextEditor
+            value={editForm.description}
+            onChange={(html) => setEditForm(f => ({ ...f, description: html }))}
+            placeholder="Descricao (opcional)"
+          />
           <input type="url" placeholder="URL da imagem *" value={editForm.imageUrl}
             onChange={e => setEditForm(f => ({ ...f, imageUrl: e.target.value }))}
             className="bg-discord-bg border border-discord-card text-white placeholder-discord-muted rounded-lg px-3 py-2 text-sm outline-none focus:border-discord-accent transition-colors" />

@@ -5,7 +5,7 @@ import Comments from '../components/Comments'
 
 const isAdmin = () => sessionStorage.getItem('mc_admin') === '1'
 
-const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', outro: '📌' }
+const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', noticia: '📰', fofoca: '💬', cs: '🔫', games: '🎮', outro: '📌' }
 
 export default function PostDetail() {
   const { id } = useParams()
@@ -83,7 +83,10 @@ export default function PostDetail() {
           </div>
 
           {description && (
-            <p className="text-discord-muted text-base mb-4 leading-relaxed">{description}</p>
+            <div
+              className="text-discord-muted text-base mb-4 leading-relaxed rich-content"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           )}
 
           {tags.length > 0 && (

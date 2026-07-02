@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', outro: '📌' }
+const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', noticia: '📰', fofoca: '💬', cs: '🔫', games: '🎮', outro: '📌' }
 
 export default function PostCard({ post, index = 0 }) {
   const { id, title, description, imageUrl, type = 'outro', tags = [], createdAt } = post

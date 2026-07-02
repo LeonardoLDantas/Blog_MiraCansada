@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { MessageCircle, CalendarDays, ArrowRight } from 'lucide-react'
 import { useComments } from '../hooks/useComments'
 
-const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', outro: '📌' }
+const TYPE_EMOJI = { meme: '😂', foto: '📸', gif: '🎬', noticia: '📰', fofoca: '💬', cs: '🔫', games: '🎮', outro: '📌' }
 
 function CommentCount({ postId }) {
   const { comments } = useComments(postId)
@@ -63,9 +63,23 @@ export default function FeedPostCard({ post, index }) {
           </h2>
         </Link>
 
-        {description && (
-          <p className="text-discord-muted text-sm leading-relaxed mb-2">{description}</p>
-        )}
+        {description && (() => {
+          const plain = description.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
+          const short = plain.length > 100
+          return (
+            <p className="text-discord-muted text-sm leading-relaxed mb-2">
+              {short ? plain.slice(0, 100) : plain}
+              {short && (
+                <>
+                  {'... '}
+                  <Link to={`/post/${id}`} className="text-discord-accent hover:underline font-medium">
+                    Ver mais
+                  </Link>
+                </>
+              )}
+            </p>
+          )
+        })()}
 
         {tags.length > 0 && (
           <div className="flex gap-1.5 flex-wrap mb-2">
